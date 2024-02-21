@@ -18,7 +18,7 @@ RUN pip install pandas numpy matplotlib anndata plotly
 
 
 # # Load remotes
-# RUN R -e "install.packages(c('remotes', 'devtools'), repos='https://cran.rstudio.com')"
+RUN R -e "install.packages(c('argparse'), repos='https://cran.rstudio.com')"
 # RUN R -e "install.packages(c('ggplot2', 'dplyr', 'tidyr'), repos='https://cran.rstudio.com')"
 # # Install SeuratDisk from GitHub
 # RUN mkdir -p /home/joyvan/R
@@ -28,7 +28,6 @@ RUN pip install pandas numpy matplotlib anndata plotly
 
 RUN mkdir -p /opt/genepatt
 
-COPY test.py /opt/genepatt/
-RUN chmod 777 /opt/genepatt/test.py
+COPY src/* /opt/genepatt/
 # Run the command to start the app
 #CMD ["python", "app.py"]

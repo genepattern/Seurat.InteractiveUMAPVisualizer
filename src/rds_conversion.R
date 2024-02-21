@@ -1,71 +1,62 @@
+#!/usr/bin/env R
+# Rscript /opt/genepatt/rds_conversion.R --input /data/seurat_preprocessed_dataset.clustered.rds
 # Load required libraries
+library(argparse)
 library(Seurat)
-library(SeuratDisk, lib.loc="/home/jovyan/R")
-library(tools, lib.loc="/home/jovyan/R")
+library(SeuratDisk)
+library(tools)
 
-# Define the function with the argparse argument
+# Parse command line arguments
+parser <- argparse::ArgumentParser(description = "Convert Seurat RDS files to H5AD format")
+parser$add_argument("--input", "-i", required = TRUE, help = "Input Seurat RDS file")
+args <- parser$parse_args()
+
 rds_conversion <- function(rdsFile) {
-  # Parse the command line arguments
-  args <- parse_args(rdsFile)
-  
-  # Print the help message if --help was passed
-  if (args$help) {
-    cat("Usage: rds_conversion [options] <input.rds>\n")
-    cat("Options:\n")
-    cat("  -h, --help                Show this help message and exit\n")
-    cat("  <input.rds>            Input RDS file\n")
+    print("converting now ...")
+    file_name <- rdsFile
+    
+    base_name <- basename(file_name)
+    # Get name of clustered RDS file without extension, used to name the dropdown_data.txt file
+    file_name_without_extension <- file_path_sans_ext(base_name)
+    
+    # Read in Seurat Clustered object
+    seurat_clustered_dataset.object <- readRDS(file = file_name)
+    
+    # Create file name for h5Seurat object
+    h5seurat_name <-paste0(file_name_without_extension, ".h5Seurat")
+    
+    # Quick fix to prevent missing data; this apparently sometimes happens as a result from changes to metadata columns in the conversion
+    # (source: https://github.com/mojaveazure/seurat-disk/issues/23)
+    i <- sapply(seurat_clustered_dataset.object@meta.data, is.factor)
+    seurat_clustered_dataset.object@meta.data[i] <- lapply(seurat_clustered_dataset.object@meta.data[i], as.character)
+    
+    # RDS -> H5AD conversion
+    suppressMessages(suppressWarnings({SaveH5Seurat(seurat_clustered_dataset.object, filename = h5seurat_name, overwrite = TRUE)
+        Convert(h5seurat_name, dest = "h5ad", overwrite = TRUE)
+    }))
+    # Extract list of metadata names from Seurat Clustered object
+    meta_data_names <- as.list(colnames(seurat_clustered_dataset.object@meta.data))
+
+    # Use grep to find indices of strings matching SeuratClustering iterations
+    matching_indices <- grep("snn", meta_data_names)
+    # Extract those matching strings from the list
+    snn_strings <- meta_data_names[matching_indices]
+    # Move those strings to beginning of list (by removing then adding at beginning of list)
+    meta_data_names <- meta_data_names[!(meta_data_names %in% c("seurat_clusters", snn_strings))]
+    meta_data_names_ordered <- c("seurat_clusters", snn_strings, meta_data_names)
+    # Specify the name of the text file containing metadata 
+    output_file <- paste0(file_name_without_extension, "_dropdown_data.txt")
+
+    # Convert the list to character vector and write to the file
+    writeLines(unlist(meta_data_names_ordered), output_file)
+    
+    # Ideally this message would be displayed via UIOutput, but I had trouble getting that to work, so just printing for now
+    print(paste0(h5seurat_name, ' and ', output_file, ' successfully written to the same folder as this notebook!'))
+    
+    
+    #gp_output <- gpUIOutput(id="output_id", title="Output Title")
     return
-  }
-  
-  # Check if the input file exists
-  if (!file.exists(args$input)) {
-    stop("Input file does not exist.")
-  }
-  
-  # Run the rest of the script
-  rds_conversion_main(args$input)
 }
 
-# Define the main function
-rds_conversion_main <- function(input) {
-  # Load the Seurat Clustered object
-  seurat_clustered_dataset.object <- readRDS(file = input)
-  
-  # Create the output file names
-  output_file_name <- file.path(file.dirname(input), "dropdown_data.txt")
-  h5seurat_name <- file.path(file.dirname(input), paste0(basename(input), ".h5Seurat"))
-  
-  # Perform the RDS -> H5AD conversion
-  suppressMessages(suppressWarnings({
-    SaveH5Seurat(seurat_clustered_dataset.object, filename = h5seurat_name, overwrite = TRUE)
-    Convert(h5seurat_name, dest = "h5ad", overwrite = TRUE)
-  }))
-  
-  # Extract the metadata names
-  meta_data_names <- as.list(colnames(seurat_clustered_dataset.object@meta.data))
-  
-  # Find the indices of the SeuratClustering iteration numbers
-  matching_indices <- grep("snn", meta_data_names)
-  snn_strings <- meta_data_names[matching_indices]
-  
-  # Remove the SeuratClustering iteration numbers from the list
-  meta_data_names <- meta_data_names[!(meta_data_names %in% c("seurat_clusters", snn_strings))]
-  
-  # Order the remaining metadata names
-  meta_data_names_ordered <- c("seurat_clusters", snn_strings, meta_data_names)
-  
-  # Write the ordered metadata names to a text file
-  writeLines(unlist(meta_data_names_ordered), output_file_name)
-  
-  # Print a success message
-  print(paste0(h5seurat_name, ' and ', output_file_name, ' successfully written to the same folder as this notebook!'))
-}
 
-# Make the script executable
-if (interactive()) {
-  rds_conversion()
-} else {
-  # Run the script with the input file as a command line argument
-  rds_conversion(commandArgs(trailingOnly = TRUE)[1])
-}
-
+rds_conversion(args$input)

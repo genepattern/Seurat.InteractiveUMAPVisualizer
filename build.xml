@@ -7,9 +7,9 @@
     <antcall target="prezip"/>
     <zip destfile="${dest.dir}/${ant.project.name}.zip" whenempty="fail" defaultexcludes="true">
         <fileset dir="." includes="manifest, paramgroups.json, LICENSE, Dockerfile"/>
-        <fileset dir="src" includes="*.sh"/>
-        <fileset dir="src" includes="*.R"/>
-        <fileset dir="src" includes="*.py"/>
+        <zipfileset dir="src" includes="*.sh"/>
+        <zipfileset dir="src" includes="*.R"/>
+        <zipfileset dir="src" includes="*.py"/>
     </zip>
     <antcall target="postzip"/>
 </target>

@@ -1,6 +1,5 @@
-#seurat.interactiveumapvisualizer
+#Seurat.InteractiveUMAPVisualizer
 #Wed Feb 01 10:00:00 PST 2023
-
 JVMLevel=
 LSID=urn:lsid:genepattern.org:module.analysis:00458:1
 author=Edwin Huang, mistralai/Mixtral-8x7B-Instruct-v0.1
@@ -11,6 +10,7 @@ description=Generate an interactive UMAP visualization of Seurat data with selec
 documentationUrl=https://github.com/johndoe/seurat-interactive-umap-visualizer/blob/master/README.md
 fileFormat=
 job.cpuCount=1
+job.docker.image=edwin5588/testplayground:plotlyviz
 job.memory=4GB
 job.walltime=01:00:00
 language=python

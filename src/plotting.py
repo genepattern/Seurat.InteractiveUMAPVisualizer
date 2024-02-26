@@ -185,6 +185,7 @@ def plot_umap(clustered_file, selected_column, target_gene, color_scale):
     fig.update_yaxes(tickfont=dict(color="rgba(0,0,0,0)"),scaleanchor="x",scaleratio=1)
     # fig.show()
     return fig.to_html(full_html=False, include_plotlyjs='cdn')
+    # return fig
 
 
 

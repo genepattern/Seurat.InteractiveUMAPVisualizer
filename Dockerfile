@@ -29,5 +29,6 @@ RUN R -e "install.packages(c('argparse'), repos='https://cran.rstudio.com')"
 RUN mkdir -p /opt/genepatt
 
 COPY src/* /opt/genepatt/
+RUN chmod 777 /opt/genepatt
 # Run the command to start the app
 #CMD ["python", "app.py"]
